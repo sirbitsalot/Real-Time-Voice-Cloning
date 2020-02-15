@@ -12,7 +12,7 @@ import torch
 class SpeakerEncoder(nn.Module):
     def __init__(self, device, loss_device):
         super().__init__()
-        self.loss_device = loss_device
+        self.loss_device = device
         
         # Network defition
         self.lstm = nn.LSTM(input_size=mel_n_channels,
@@ -24,8 +24,10 @@ class SpeakerEncoder(nn.Module):
         self.relu = torch.nn.ReLU().to(device)
         
         # Cosine similarity scaling (with fixed initial parameter values)
-        self.similarity_weight = nn.Parameter(torch.tensor([10.])).to(loss_device)
-        self.similarity_bias = nn.Parameter(torch.tensor([-5.])).to(loss_device)
+        ## sberryman fix to CJ's gradients None issue: send the tensor to cuda, not the parameter.
+        ## TODO: check how this will affect DataParallel implementation.
+        self.similarity_weight = nn.Parameter(torch.tensor([10.]).to(loss_device))
+        self.similarity_bias = nn.Parameter(torch.tensor([-5.]).to(loss_device))
 
         # Loss
         self.loss_fn = nn.CrossEntropyLoss().to(loss_device)

@@ -8,7 +8,9 @@ import torch
 
 def sync(device: torch.device):
     # FIXME
-    return 
+    ## I believe CJ didn't sync because of a gradients issue. I believe this is related to the tensor vs parameter fix
+    ## sberryman implemented in train(), so I am letting cuda do the sync.
+    ## return 
     # For correct profiling (cuda operations are async)
     if device.type == "cuda":
         torch.cuda.synchronize(device)
@@ -30,7 +32,8 @@ def train(run_id: str, clean_data_root: Path, models_dir: Path, umap_every: int,
     # hyperparameters) faster on the CPU.
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     # FIXME: currently, the gradient is None if loss_device is cuda
-    loss_device = torch.device("cpu")
+    ## sberryman's approach to send the tensors to cuda instead of just the parameters should allow gradients to compute correctly.
+    loss_device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     
     # Create the model and the optimizer
     model = SpeakerEncoder(device, loss_device)
